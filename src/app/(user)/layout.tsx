@@ -16,7 +16,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <>
       {ready && (
         <div className="w-full h-screen relative">
-          <div className="w-full h-full py-12 overflow-x-auto flex justify-center">{children}</div>
+          <div className="w-full h-full overflow-x-auto flex justify-center">{children}</div>
         </div>
       )}
 

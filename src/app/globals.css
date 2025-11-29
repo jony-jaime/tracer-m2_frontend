@@ -6,66 +6,47 @@ body {
   @apply font-sans;
 }
 
-.btn {
-  @apply bg-primary text-white font-sans text-base  font-bold rounded-sm border-none py-2 lg:py-3 px-12 transition-all inline-flex items-center gap-2;
-}
-
-.btn:hover {
-  @apply bg-primary_hover;
-}
-
-.btn-gradient {
-  @apply bg-gradient-to-r from-primary to-primary_hover text-white font-sans text-lg font-bold rounded-md border-none py-4 px-12 transition-all;
-}
-
-.btn-gradient:hover {
-  @apply from-primary_hover to-primary_hover;
-}
-
-.btn-dark {
-  @apply bg-dark text-white font-sans text-lg font-bold rounded-md outline-none border-none py-2 px-12 transition-all;
-}
-
-.btn-dark:hover {
-  @apply bg-primary;
-}
-
-.btn-link {
-  @apply !bg-transparent p-0 m-0 underline underline-offset-2;
-}
-
-.btn-white {
-  @apply bg-white text-dark inline-flex items-center gap-1 shadow-xl;
-}
-
-.btn-white:hover {
-  @apply bg-dark text-white;
-}
-
-.btn-outline-primary {
-  @apply !bg-transparent !text-primary border border-primary !border-solid inline-flex items-center gap-1 rounded-md;
-}
-
-.btn-outline-primary:hover {
-  @apply !bg-primary !text-white inline-flex items-center gap-1;
-}
-
-.btn-outline-white {
-  @apply !bg-transparent !text-white border border-white !border-solid inline-flex items-center gap-1 rounded-md;
-}
-
-.btn-outline-white:hover {
-  @apply !bg-white !text-dark inline-flex items-center gap-1;
-}
-
-.btn-outline-dark {
-  @apply !bg-transparent !text-dark border border-dark !border-solid inline-flex items-center gap-1 rounded-md;
-}
-
-.btn-outline-dark:hover {
-  @apply !bg-dark !text-white inline-flex items-center gap-1;
-}
-
 .grecaptcha-badge {
   display: none !important;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }
