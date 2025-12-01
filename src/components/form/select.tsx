@@ -1,10 +1,27 @@
-// Select.tsx
 "use client";
 
-import { ErrorMessage, useField } from "formik";
-import React from "react";
-import ReactSelect, { components, MultiValue, SingleValue } from "react-select";
-import { ChevronDown } from "react-feather";
+import { useField, useFormikContext } from "formik";
+import { useState, useEffect } from "react";
+
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandInput,
+  CommandEmpty,
+} from "@/components/ui/command";
+
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Check, ChevronsUpDown } from "lucide-react";
+
+import clsx from "clsx";
 
 interface Option {
   value: string;
@@ -13,72 +30,129 @@ interface Option {
 
 interface SelectProps {
   id?: string;
-  label: string;
   name: string;
-  customclass?: string;
+  label?: string;
   options: Option[];
-  isMulti?: boolean;
   placeholder?: string;
-
-  value?: Option | Option[] | null;
-  onChange?: (selected: MultiValue<Option> | SingleValue<Option>) => void;
+  isMulti?: boolean;
+  className?: string;
 }
 
-export const Select: React.FC<SelectProps> = (props) => {
-  const [field, meta, helpers] = useField(props.name);
+const Select: React.FC<SelectProps> = ({
+  id,
+  name,
+  label,
+  options,
+  placeholder = "Seleccionar...",
+  isMulti = false,
+  className,
+}) => {
+  const [field, meta] = useField(name);
+  const { setFieldValue } = useFormikContext();
+
   const hasError = meta.touched && meta.error;
+  const inputId = id || name;
 
-  // Si pasan value/onChange → lo usamos como controlled
-  const isControlled = props.value !== undefined && props.onChange;
+  const [open, setOpen] = useState(false);
 
-  // Adaptar value de Formik a react-select (cuando no es controlled)
-  const currentValue = props.isMulti
-    ? props.options?.filter((opt) => (Array.isArray(field.value) ? field.value.includes(opt.value) : []))
-    : props.options?.find((opt) => opt.value === field.value) || null;
+  // Convert formik value → array or string depending on mode
+  const selectedValues: string[] = isMulti
+    ? Array.isArray(field.value)
+      ? field.value
+      : []
+    : field.value
+      ? [field.value]
+      : [];
 
-  const handleChange = (selected: MultiValue<Option> | SingleValue<Option>) => {
-    if (isControlled) {
-      props.onChange?.(selected);
-    } else {
-      if (props.isMulti) {
-        const selectedArray = (selected as MultiValue<Option>) || [];
-        helpers.setValue(selectedArray.map((s) => s.value));
+  const toggleValue = (value: string) => {
+    if (isMulti) {
+      if (selectedValues.includes(value)) {
+        setFieldValue(
+          name,
+          selectedValues.filter((v) => v !== value)
+        );
       } else {
-        const selectedOption = selected as SingleValue<Option>;
-        helpers.setValue(selectedOption ? selectedOption.value : "");
+        setFieldValue(name, [...selectedValues, value]);
       }
+    } else {
+      setFieldValue(name, value);
+      setOpen(false);
     }
   };
 
+  const selectedLabels = options
+    .filter((opt) => selectedValues.includes(opt.value))
+    .map((opt) => opt.label);
+
   return (
-    <div className={`relative w-full ${props.customclass || ""}`}>
-      <ReactSelect
-        inputId={props.id || props.name}
-        options={props.options}
-        value={isControlled ? props.value : currentValue}
-        isMulti={props.isMulti}
-        placeholder={props.placeholder || "Seleccionar..."}
-        classNamePrefix="react-select"
-        onChange={handleChange}
-        onBlur={() => helpers.setTouched(true)}
-        components={{
-          DropdownIndicator: (p) => (
-            <components.DropdownIndicator {...p}>
-              <ChevronDown className="text-gray-400" size={18} />
-            </components.DropdownIndicator>
-          ),
-        }}
-      />
+    <div className={`flex flex-col gap-1 w-full ${className || ""}`}>
+      {label && (
+        <Label htmlFor={inputId} className={hasError ? "text-red-500" : ""}>
+          {label}
+        </Label>
+      )}
 
-      <label
-        htmlFor={props.id || props.name}
-        className={`absolute left-2 -top-2.5 bg-white px-1 text-xs text-gray-500 transition-all 
-          ${hasError ? "text-red-500" : ""}`}
-      >
-        {props.label}
-      </label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger
+          id={inputId}
+          className={clsx(
+            "w-full border rounded-md px-3 py-2 flex justify-between items-center cursor-pointer",
+            "bg-background",
+            hasError ? "border-red-500" : "border-input"
+          )}
+        >
+          <div className="flex flex-wrap gap-1 text-sm">
+            {selectedLabels.length === 0 && (
+              <span className="text-muted-foreground">{placeholder}</span>
+            )}
 
-      <ErrorMessage name={props.name} component="span" className="text-red-500 text-xs mt-1 block" />
+            {isMulti
+              ? selectedLabels.map((label) => (
+                <Badge
+                  key={label}
+                  variant="secondary"
+                  className="mr-1"
+                >
+                  {label}
+                </Badge>
+              ))
+              : selectedLabels[0]}
+          </div>
+
+          <ChevronsUpDown className="h-4 w-4 opacity-50" />
+        </PopoverTrigger>
+
+        <PopoverContent className="w-full p-0">
+          <Command>
+            <CommandInput placeholder="Buscar..." />
+            <CommandEmpty>No encontrado</CommandEmpty>
+            <CommandGroup className="max-h-60 overflow-auto">
+              {options.map((opt) => {
+                const isSelected = selectedValues.includes(opt.value);
+
+                return (
+                  <CommandItem
+                    key={opt.value}
+                    onSelect={() => toggleValue(opt.value)}
+                  >
+                    <Check
+                      className={clsx(
+                        "mr-2 h-4 w-4",
+                        isSelected ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {opt.label}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {hasError && (
+        <span className="text-xs text-red-500">{meta.error}</span>
+      )}
     </div>
   );
 };

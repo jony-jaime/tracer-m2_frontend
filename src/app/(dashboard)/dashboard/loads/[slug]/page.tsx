@@ -1,59 +1,93 @@
 "use client";
 
+import LoadForm from "@/components/forms/load-form";
+import { DataTable } from "@/components/table/data-table";
+import { columns } from "@/components/table/loads/columns";
+import LoadSheet from "@/components/table/loads/sheet";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useData } from "@/hooks/useData";
+import { Construction } from "@/interfaces/construction";
 import { Load } from "@/interfaces/load";
 import endPoints from "@/services/endpoints";
-import Link from "next/link";
+import { PlusIcon } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useState } from "react";
+import { ClipLoader } from "react-spinners";
+
 
 export default function LoadsListPage() {
   const { slug } = useParams();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);
 
   if (!slug || Array.isArray(slug)) {
     throw new Error("Slug inválido");
   }
 
-  const { data, isLoading, error } = useData<Load[]>(endPoints.constructions.loads.all(slug as string), `construction-${slug}-loads`, { enabled: !!slug });
+  const { data: building, isLoading: isLoadingBuilding } = useData<Construction>(
+    endPoints.constructions.getOne(slug),
+    `construction-${slug}`,
+    { enabled: !!slug }
+  );
+
+  const { data, isLoading, error } = useData<Load[]>(
+    endPoints.constructions.loads.all(slug),
+    `construction-${slug}-loads`,
+    { enabled: !!slug }
+  );
+
+  const loadsWithActions =
+    data?.map((load) => ({
+      ...load,
+      openSheet: (load: Load) => {
+        setSelectedLoad(load);
+        setSheetOpen(true);
+      },
+    })) ?? [];
+
+  if (isLoading || isLoadingBuilding) {
+    return (
+      <section className="h-screen flex justify-center items-center">
+        <ClipLoader size={24} color="white" loading={true} />
+      </section>
+    );
+  }
 
   return (
-    <section className="py-12">
-      <div className="container">
-        <h1 className="text-2xl font-bold mb-6">Cargas registradas</h1>
+    <section className="">
+      {building && (
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h1 className="text-3xl font-semibold">{building.title}</h1>
+            <h2 className="text-xl font-bold">Cargas registradas</h2>
+          </div>
 
-        {isLoading && <p>Cargando...</p>}
-        {error && <p className="text-red-500">Error al cargar cargas</p>}
+          <Button
+            onClick={() => {
+              setSelectedLoad(null);
+              setSheetOpen(true);
+            }}
+          >
+            <PlusIcon className="h-4 w-4" /> Nueva carga
+          </Button>
+        </div>
+      )}
 
-        {data && data.length > 0 ? (
-          <table className="w-full border-collapse border border-slate-300 text-sm">
-            <thead>
-              <tr className="bg-slate-100 text-left">
-                <th className="border p-2">Fecha</th>
-                <th className="border p-2">Notas</th>
-                <th className="border p-2">Tareas</th>
-                <th className="border p-2">Asignaciones</th>
-                <th className="border p-2">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((load) => (
-                <tr key={load.id} className="hover:bg-slate-50">
-                  <td className="border p-2">{load.date}</td>
-                  <td className="border p-2">{load.notes ?? "-"}</td>
-                  <td className="border p-2">{load.tasks?.length ?? 0}</td>
-                  <td className="border p-2">{load.employee_hours?.length ?? 0}</td>
-                  <td className="border p-2">
-                    <Link href={`/dashboard/loads/${slug}/${load.id}`} className="text-blue-600 hover:underline">
-                      Ver detalle
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          !isLoading && data && data.length === 0 && <p>No hay cargas registradas todavía.</p>
-        )}
-      </div>
+
+      {data && data.length > 0 ? (
+        <DataTable columns={columns} data={loadsWithActions} />
+      ) : (
+        !isLoading && <p>No se encontraron cargas registradas.</p>
+      )}
+
+      {/* SHEET */}
+      <LoadSheet
+        load={selectedLoad}
+        constructionId={String(building?.id)}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      />
     </section>
   );
 }

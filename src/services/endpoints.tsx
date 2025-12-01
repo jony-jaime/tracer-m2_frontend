@@ -19,10 +19,12 @@ const endPoints = {
     loads: {
       all: (id: string) => `${API}/constructions/${id}/loads`,
       one: (constructionId: string, loadId: string | number) => `${API}/constructions/${constructionId}/loads/${loadId}`,
+      update: (constructionId: string | number, loadId: string | number) => `${API}/constructions/${constructionId}/loads/${loadId}`,
     },
   },
   loads: {
     create: `${API}/loads`,
+    update: (constructionId: string | number, loadId: string | number) => `${API}/constructions/${constructionId}/loads/${loadId}`,
   },
 
   employees: {
